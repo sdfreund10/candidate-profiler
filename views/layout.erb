@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-umd.min.js" defer></script>
+  <title>VoteCheck – Research any candidate</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+      margin: 0;
+      min-height: 100vh;
+      background: #F7F7F7;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .logo {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: #333;
+    }
+    .nav-link {
+      color: #6b7280;
+      text-decoration: none;
+      font-size: 0.9375rem;
+    }
+    .nav-link:hover { color: #333; }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .hero {
+      max-width: 560px;
+    }
+    .hero h1 {
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      font-weight: 700;
+      color: #333;
+      margin: 0 0 1rem;
+      line-height: 1.2;
+    }
+    .hero h1 .highlight { color: #F7A823; }
+    .hero .tagline {
+      font-size: 1.0625rem;
+      color: #4b5563;
+      margin: 0 0 2rem;
+      line-height: 1.6;
+    }
+    .search-row {
+      display: flex;
+      gap: 0;
+      max-width: 480px;
+      margin: 0 auto 0.5rem;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .search-row input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #e5e7eb;
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+      background: #fff;
+    }
+    .search-row input::placeholder { color: #9ca3af; }
+    .search-row input:focus {
+      outline: none;
+      border-color: #7A8DA1;
+    }
+    .search-row button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #fff;
+      background: #7A8DA1;
+      border: none;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .search-row button:hover { background: #6b7d91; }
+    .search-row button svg { flex-shrink: 0; }
+    .hint {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0 0 1rem;
+    }
+    .error {
+      color: #b91c1c;
+      font-size: 0.9375rem;
+      margin-top: 0.5rem;
+    }
+    .footer {
+      padding: 1.5rem 1rem;
+      text-align: center;
+      font-size: 0.8125rem;
+      color: #6b7280;
+    }
+    .profile { margin-top: 2rem; padding: 1rem; background: #f8fafc; border-radius: 6px; white-space: pre-wrap; text-align: left; max-width: 720px; }
+    .profile h2, .profile h3 { margin-top: 1rem; margin-bottom: 0.5rem; }
+    a { color: #2563eb; }
+    .loading-page-wrap {
+      background: #F9F9F9;
+      width: 100%;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .loading-page-hero { margin: 0 auto; }
+    .research-loading .spinner {
+      width: 48px;
+      height: 48px;
+      margin: 1.5rem auto;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    .research-loading .spinner-ring {
+      border: 4px solid #e0e0e0;
+      border-top-color: #F7A823;
+      background: transparent;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .steps {
+      list-style: none;
+      padding: 0;
+      margin: 0 auto;
+      max-width: 320px;
+      text-align: left;
+    }
+    .steps .step {
+      font-size: 0.9375rem;
+      color: #9ca3af;
+      padding: 0.35rem 0;
+    }
+    .steps .step.active {
+      color: #333;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo-wrap">
+      <svg class="logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="32" height="32" rx="4" fill="#2563eb"/>
+        <path d="M8 16l5 5 11-11" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="brand">VoteCheck</span>
+    </div>
+    <a href="/" class="nav-link">Know your candidates</a>
+  </header>
+  <main>
+    <%= yield %>
+  </main>
+  <footer class="footer">
+    VoteCheck helps voters make informed decisions. Not affiliated with any political party.
+  </footer>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<div class="hero research-loading" data-url="<%= ERB::Util.html_escape(@campaign_url) %>">
+  <h1>Researching candidate...</h1>
+  <p class="tagline">This usually takes a few seconds</p>
+  <div class="spinner" aria-hidden="true"></div>
+  <ul id="steps" class="steps" aria-live="polite"></ul>
+  <p id="stream-error" class="error" style="display: none;"></p>
+</div>
+
+<script>
+(function() {
+  var hero = document.querySelector(".research-loading");
+  var url = hero && hero.getAttribute("data-url");
+  if (!url) return;
+
+  var stepsEl = document.getElementById("steps");
+  var errorEl = document.getElementById("stream-error");
+
+  var streamUrl = "/generate/stream?url=" + encodeURIComponent(url);
+  var es = new EventSource(streamUrl);
+
+  es.addEventListener("status", function(e) {
+    var line = (e.data || "").trim();
+    if (!line) return;
+    var li = document.createElement("li");
+    li.className = "step";
+    li.textContent = line;
+    stepsEl.appendChild(li);
+    stepsEl.querySelectorAll(".step").forEach(function(s) { s.classList.remove("active"); });
+    li.classList.add("active");
+  });
+
+  es.addEventListener("done", function() {
+    es.close();
+    window.location.href = "/result";
+  });
+
+  es.addEventListener("error", function(e) {
+    if (e.data) {
+      errorEl.textContent = e.data;
+      errorEl.style.display = "block";
+    }
+    es.close();
+  });
+
+  es.onerror = function() {
+    if (es.readyState === EventSource.CLOSED) return;
+    errorEl.textContent = "Connection lost. Please try again.";
+    errorEl.style.display = "block";
+    es.close();
+  };
+})();
+</script>

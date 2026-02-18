@@ -1,0 +1,189 @@
+<turbo-frame id="profile">
+  <% if @generator.incomplete? %>
+    <div class="loading-page-wrap">
+      <div class="hero research-loading loading-page-hero" data-url="<%= ERB::Util.html_escape(@campaign_url) %>">
+        <h1>Researching candidate...</h1>
+        <p class="tagline">This usually takes a few minutes</p>
+        <div class="spinner spinner-ring" aria-hidden="true"></div>
+      </div>
+    </div>
+  <% else %>
+    <nav class="profile-nav">
+      <a href="/" class="profile-back" data-turbo-frame="_top">← Research another candidate</a>
+      <div class="view-toggle" role="tablist">
+        <button type="button" class="view-toggle-btn active" data-view="cards" aria-selected="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Cards
+        </button>
+        <button type="button" class="view-toggle-btn" data-view="plain" aria-selected="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+          Plain text
+        </button>
+      </div>
+    </nav>
+
+    <div id="view-cards" class="profile-view" role="tabpanel">
+      <div class="profile-cards">
+        <section class="card card-summary">
+          <div class="card-summary-inner">
+            <div class="card-summary-text">
+              <h1 class="candidate-name"><%= ERB::Util.html_escape(@profile.candidate_name) %></h1>
+              <% if @profile.candidate_party %>
+                <span class="party-pill"><%= ERB::Util.html_escape(@profile.candidate_party) %></span>
+              <% end %>
+              <% if @profile.office_sought %>
+                <p class="office">Running for <%= ERB::Util.html_escape(@profile.office_sought) %></p>
+              <% end %>
+              <% if @campaign_url %>
+                <a href="<%= ERB::Util.html_escape(@campaign_url) %>" target="_blank" rel="noopener" class="campaign-link">Campaign website <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg></a>
+              <% end %>
+            </div>
+          </div>
+        </section>
+
+        <% if @profile.candidate_background %>
+          <section class="card">
+            <h2 class="card-title">
+              <svg class="card-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+              Background
+            </h2>
+            <p class="card-body"><%= ERB::Util.html_escape(@profile.candidate_background) %></p>
+          </section>
+        <% end %>
+
+        <% if @profile.key_policy_issues.any? %>
+          <section class="card">
+            <h2 class="card-title">
+              <svg class="card-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              Key Issues
+            </h2>
+            <ul class="issues-list">
+              <% @profile.key_policy_issues.each do |position| %>
+                <li class="issue-item">
+                  <span class="issue-bar"></span>
+                  <div>
+                    <strong class="issue-title"><%= ERB::Util.html_escape((position.issue).to_s) %></strong>
+                    <p class="issue-summary"><%= ERB::Util.html_escape((position.summary).to_s) %></p>
+                  </div>
+                </li>
+              <% end %>
+            </ul>
+          </section>
+        <% end %>
+
+        <% if @profile.key_endorsements.any? %>
+          <section class="card">
+            <h2 class="card-title">
+              <svg class="card-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+              Endorsements
+            </h2>
+            <ul class="endorsements-list">
+              <% @profile.key_endorsements.each do |e| %>
+                <li><%= ERB::Util.html_escape(e.to_s) %></li>
+              <% end %>
+            </ul>
+          </section>
+        <% end %>
+      </div>
+    </div>
+
+    <div id="view-plain" class="profile-view hidden" role="tabpanel">
+      <div class="plain-text-card">
+        <div class="plain-text-header">
+          <button type="button" class="copy-btn" id="copy-profile" title="Copy">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <div class="plain-text-body" id="plain-text-content">
+          <p>
+            <%= ERB::Util.html_escape(@text_profile) %>
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</turbo-frame>
+
+<style>
+.profile-layout { max-width: 720px; margin: 0 auto; width: 100%; }
+.profile-nav { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; }
+.profile-back { color: #2563eb; text-decoration: none; font-size: 0.9375rem; }
+.profile-back:hover { text-decoration: underline; }
+.view-toggle { display: inline-flex; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+.view-toggle-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; font-size: 0.875rem; background: #fff; color: #6b7280; border: none; cursor: pointer; }
+.view-toggle-btn svg { flex-shrink: 0; }
+.view-toggle-btn.active { background: #333; color: #fff; }
+.view-toggle-btn:not(.active):hover { background: #f9fafb; }
+.profile-view.hidden { display: none; }
+.profile-cards { display: flex; flex-direction: column; gap: 1rem; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 1.25rem; }
+.card-summary-inner { display: flex; gap: 1rem; align-items: flex-start; }
+.avatar { width: 64px; height: 64px; border-radius: 50%; background: #f3f4f6; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.card-summary-text { flex: 1; min-width: 0; }
+.candidate-name { font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem; color: #333; }
+.party-pill { display: inline-block; background: #F7A823; color: #fff; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 999px; margin-bottom: 0.25rem; }
+.office { font-size: 0.9375rem; color: #6b7280; margin: 0 0 0.35rem; }
+.campaign-link { font-size: 0.9375rem; color: #2563eb; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; }
+.campaign-link:hover { text-decoration: underline; }
+.card-title { font-size: 1rem; font-weight: 700; margin: 0 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+.card-icon { flex-shrink: 0; color: #6b7280; }
+.card-body { margin: 0; font-size: 0.9375rem; line-height: 1.6; color: #374151; }
+.issues-list { list-style: none; padding: 0; margin: 0; }
+.issue-item { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; }
+.issue-item:last-child { margin-bottom: 0; }
+.issue-bar { flex-shrink: 0; width: 4px; background: #F7A823; border-radius: 2px; min-height: 2.5em; }
+.issue-title { font-size: 0.9375rem; display: block; margin-bottom: 0.2rem; }
+.issue-summary { margin: 0; font-size: 0.9375rem; color: #374151; line-height: 1.5; }
+.endorsements-list { list-style: none; padding: 0; margin: 0; font-size: 0.9375rem; color: #374151; }
+.endorsements-list li { padding: 0.2rem 0; }
+.plain-text-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 1.25rem; }
+.plain-text-header { display: flex; justify-content: flex-end; margin-bottom: 0.75rem; }
+.copy-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; font-size: 0.875rem; background: #f3f4f6; border: none; border-radius: 6px; cursor: pointer; color: #374151; }
+.copy-btn:hover { background: #e5e7eb; }
+.plain-text-body { font-size: 0.9375rem; line-height: 1.6; color: #333; white-space: pre-wrap; }
+.plain-text-body h1 { font-size: 1.25rem; margin: 0 0 0.5rem; }
+.plain-text-body h2 { font-size: 1rem; margin: 1rem 0 0.35rem; font-weight: 700; }
+.plain-text-body .plain-meta, .plain-text-body .plain-url { margin: 0 0 0.5rem; color: #6b7280; }
+.plain-text-body ul { margin: 0.5rem 0; padding-left: 1.5rem; }
+</style>
+
+<script>
+(function() {
+  var cardsBtn = document.querySelector('.view-toggle-btn[data-view="cards"]');
+  var plainBtn = document.querySelector('.view-toggle-btn[data-view="plain"]');
+  var cardsView = document.getElementById('view-cards');
+  var plainView = document.getElementById('view-plain');
+  function showCards() {
+    cardsView.classList.remove('hidden');
+    plainView.classList.add('hidden');
+    cardsBtn.classList.add('active');
+    cardsBtn.setAttribute('aria-selected', 'true');
+    plainBtn.classList.remove('active');
+    plainBtn.setAttribute('aria-selected', 'false');
+  }
+  function showPlain() {
+    plainView.classList.remove('hidden');
+    cardsView.classList.add('hidden');
+    plainBtn.classList.add('active');
+    plainBtn.setAttribute('aria-selected', 'true');
+    cardsBtn.classList.remove('active');
+    cardsBtn.setAttribute('aria-selected', 'false');
+  }
+  if (cardsBtn) cardsBtn.addEventListener('click', showCards);
+  if (plainBtn) plainBtn.addEventListener('click', showPlain);
+
+  var copyBtn = document.getElementById('copy-profile');
+  var plainContent = document.getElementById('plain-text-content');
+  if (copyBtn && plainContent) {
+    copyBtn.addEventListener('click', function() {
+      var text = plainContent.innerText || plainContent.textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        var label = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(function() { copyBtn.textContent = label; }, 2000);
+      });
+    });
+  }
+})();
+</script>
