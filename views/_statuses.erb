@@ -1,5 +1,5 @@
 <% status_updates ||= @status_updates %>
-<turbo-frame id="status-updates" src="/status?campaign_url=<%= ERB::Util.html_escape(@campaign_url) %>">
+<turbo-stream target="status-updates" action="update">
   <template>
     <ul id="steps" class="steps" aria-live="polite">
       <% status_updates&.each do |status| %>
@@ -7,4 +7,4 @@
       <% end %>
     </ul>
   </template>
-</turbo-frame>
+</turbo-stream>

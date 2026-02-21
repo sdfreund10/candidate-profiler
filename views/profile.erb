@@ -1,15 +1,19 @@
 <div class="profile-layout">
-  <%# initially render loading view %>
+  <%# Loading UI; updates stream in via turbo-stream-source (SSE), then final replace via Turbo Stream %>
 
-  <turbo-frame id="profile" src="/candidate-profile?campaign_url=<%= ERB::Util.html_escape(campaign_url) %>" data-turbo-frame="_top">
+  <turbo-frame id="profile" data-turbo-frame="_top">
     <div class="loading-page-wrap">
       <div class="hero research-loading loading-page-hero" data-url="<%= ERB::Util.html_escape(campaign_url) %>">
         <h1>Researching candidate...</h1>
         <p class="tagline">This usually takes a few minutes</p>
         <div class="spinner spinner-ring" aria-hidden="true"></div>
+        <div id="status-updates">
+        </div>
       </div>
     </div>
   </turbo-frame>
+
+  <turbo-stream-source src="/candidate-profile?campaign_url=<%= ERB::Util.html_escape(URI.encode_www_form_component(campaign_url)) %>"></turbo-stream-source>
 </div>
 
 <style>

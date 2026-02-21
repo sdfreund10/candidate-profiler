@@ -20,6 +20,7 @@ class ProfileGenerator
       with_tool(FollowLink)
     @text_profile = nil
     @json_profile = nil
+    @status_updates = []
   end
 
   def incomplete?
@@ -35,12 +36,10 @@ class ProfileGenerator
     chat = RubyLLM::Chat.new.
       with_instructions(system_prompt).
       with_tool(FollowLink)
-    response = chat.ask(starting_page) do |stream|
-      next unless block_given? && stream.content
-      handle_stream_chunk(stream.content)
-      block.call(@status_updates)
-    end
+    response = chat.with_tool(ReportStatus.new(self, &block)).ask(starting_page)
     @text_profile = response.content
+    @status_updates << "Summarizing candidate information..."
+    block.call(@status_updates.last)
 
     @json_profile = RubyLLM::Chat.new.
       with_instructions(json_prompt).
@@ -66,20 +65,19 @@ class ProfileGenerator
 
   private
 
+  # DEPRECATED
+  STATUS_REGEX = /<status>(.*?)<\/status>/
   def handle_stream_chunk(chunk)
     @status_buffer ||= ""
     @status_updates ||= []
 
     return unless chunk
+    return if chunk.length > 1000 # long responses are probably not status updates
+
     @status_buffer << chunk
-    # puts "Status buffer: #{@status_buffer}"
-    # TODO: Not reliably ending in new lines
-    if @status_buffer.include?("\n")
-      *lines, @status_buffer = @status_buffer.split("\n")
-      @status_updates.concat(lines)
-    elsif @status_buffer.include?(".")
-      *lines, @status_buffer = @status_buffer.split(".")
-      @status_updates.concat(lines)
+    if match = @status_buffer.match(STATUS_REGEX)
+      @status_updates << match[0].delete_prefix("<status>").delete_suffix("</status>")
+      @status_buffer = @status_buffer.delete_prefix(match[0].to_s)
     end
   end
 
@@ -104,11 +102,11 @@ class ProfileGenerator
 
       Try to utilize the campaign's words as much as possible.
       If information is not available, explicitly state that it is not present.
-      Keep the tone informative and neutral.
-      The output should be concise enough to fit on a single flyer.
-      Your result should be in #{@output_format} format.
-      Provide passive-voice status updates on your progress as you follow links and collect information, alawys ending with a new line.
+      Keep the tone informative and neutral. The output should be concise enough to fit on a single flyer.
       Your final response should container only the candidate profile.
+
+      As you collect information provide passive voice status updates to the user via the ReportStatus tool.
+        Example: "Scanning the home page for candidate information."
     PROMPT
   end
 
@@ -144,11 +142,28 @@ class ProfileGenerator
     end
 
     def execute(url:)
-      puts "Following link: #{url}"
       Webpage.new(url).to_markdown
     rescue StandardError => e
       puts "Error following link #{url}: #{e.message}"
       "Could not open and parse the link"
+    end
+  end
+
+  class ReportStatus < RubyLLM::Tool
+    description "Reports a status update to the user."
+
+    params do
+      string :status, description: "The status update to report."
+    end
+
+    def initialize(generator, &on_log)
+      @generator = generator
+      @on_log = on_log
+    end
+
+    def execute(status:)
+      @generator.status_updates << status
+      @on_log.call(status)
     end
   end
 end
