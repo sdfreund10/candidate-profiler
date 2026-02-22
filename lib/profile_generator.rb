@@ -38,7 +38,7 @@ class ProfileGenerator
       with_tool(FollowLink)
     response = chat.with_tool(ReportStatus.new(self, &block)).ask(starting_page)
     @text_profile = response.content
-    @status_updates << "Summarizing candidate information..."
+    @status_updates << "Building profile."
     block.call(@status_updates.last)
 
     @json_profile = RubyLLM::Chat.new.
@@ -105,8 +105,9 @@ class ProfileGenerator
       Keep the tone informative and neutral. The output should be concise enough to fit on a single flyer.
       Your final response should container only the candidate profile.
 
-      As you collect information provide passive voice status updates to the user via the ReportStatus tool.
-        Example: "Scanning the home page for candidate information."
+      As you collect information provide passive voice status updates to the user via the ReportStatus tool. Log the status to the user up to 5 times.
+        Example: "Scanning <page name>." or "Summarizing candidate info."
+
     PROMPT
   end
 
@@ -162,7 +163,9 @@ class ProfileGenerator
     end
 
     def execute(status:)
+      puts "Reporting status: #{status}"
       @generator.status_updates << status
+      puts "Status updates: #{@generator.status_updates}"
       @on_log.call(status)
     end
   end
