@@ -5,12 +5,13 @@ require "dotenv/load"
 require "sinatra/base"
 require "profile_generator"
 require "kramdown"
-require "debug"
+require "debug" if ENV["RACK_ENV"] != "production"
 
 class CandidateSummaryApp < Sinatra::Base
   set :root, File.expand_path(__dir__)
   set :views, (proc { File.join(root, "views") })
   set :public_folder, File.expand_path("public", __dir__)
+  set :port, ENV["PORT"] || 4567
 
   get "/" do
     erb :index
